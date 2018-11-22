@@ -4,17 +4,23 @@ import java.util.HashMap;
 
 public class PipelineContext {
 
-    HashMap<PipelineStep, Object> resultsPerStep = new HashMap<>();
+    public interface PipelineResult {
+        void clear();
+        @Override
+        String toString();
+    }
 
-    public synchronized HashMap<PipelineStep, Object> getResults() {
+    HashMap<PipelineStep, PipelineResult> resultsPerStep = new HashMap<>();
+
+    public synchronized HashMap<PipelineStep, PipelineResult> getResults() {
         return resultsPerStep;
     }
 
     public synchronized void clearResults() {
-        resultsPerStep.clear();
+        resultsPerStep.values().forEach(PipelineResult::clear);
     }
 
-    public synchronized void setResults(PipelineStep owner,  Object results) {
+    public synchronized void setResults(PipelineStep owner,  PipelineResult results) {
         resultsPerStep.put(owner, results);
     }
 

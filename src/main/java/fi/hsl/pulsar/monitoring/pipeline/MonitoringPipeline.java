@@ -8,21 +8,32 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class MonitoringPipeline implements IMessageHandler {
     private static final Logger log = LoggerFactory.getLogger(MonitoringPipeline.class);
 
     private TripUpdateCounter tripUpdatePipeline;
     private PipelineContext context = new PipelineContext();
+    final ScheduledExecutorService scheduler;
 
-    private MonitoringPipeline() {
+    private MonitoringPipeline(int pollIntervalSecs) {
         tripUpdatePipeline = new TripUpdateCounter();
 
+        scheduler = Executors.newSingleThreadScheduledExecutor();
+        log.info("Starting scheduler");
+
+        scheduler.scheduleAtFixedRate(() -> {
+            String results = context.getResultsAndClear();
+            log.info(results);
+        }, pollIntervalSecs, pollIntervalSecs, TimeUnit.SECONDS);
     }
 
     public static MonitoringPipeline newPipeline() {
         //We could initialize different pipelines based on configs / arguments
-        return new MonitoringPipeline();
+        return new MonitoringPipeline(10);
     }
 
     public void handleMessage(final Message msg) throws Exception {
@@ -33,8 +44,6 @@ public class MonitoringPipeline implements IMessageHandler {
                     if (tripUpdatePipeline != null) {
                         context = tripUpdatePipeline.handleMessage(context, tu);
                     }
-
-                    log.info(context.resultsAsString());
                 }
                 else {
                     log.info("Ignoring message of schema " + schema);
@@ -64,5 +73,6 @@ public class MonitoringPipeline implements IMessageHandler {
 
     public void close() {
         log.info("Closing pipeline");
+        scheduler.shutdown();
     }
 }

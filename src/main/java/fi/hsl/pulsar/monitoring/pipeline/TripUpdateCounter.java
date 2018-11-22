@@ -7,9 +7,15 @@ import org.slf4j.LoggerFactory;
 public class TripUpdateCounter extends PipelineStep<GtfsRealtime.TripUpdate> {
     private static final Logger log = LoggerFactory.getLogger(TripUpdateCounter.class);
 
-    class CountResults {
+    class CountResults implements PipelineContext.PipelineResult {
         long counter;
         long startTime = System.currentTimeMillis();
+
+        @Override
+        public void clear() {
+            counter = 0;
+            startTime = System.currentTimeMillis();
+        }
 
         @Override
         public String toString() {
