@@ -33,4 +33,10 @@ public class PipelineContext {
 
         return builder.toString();
     }
+
+    public synchronized String getResultsAndClear() {
+        String results = resultsAsString();
+        clearResults();
+        return results;
+    }
 }

@@ -9,10 +9,14 @@ public class TripUpdateCounter extends PipelineStep<GtfsRealtime.TripUpdate> {
 
     class CountResults {
         long counter;
+        long startTime = System.currentTimeMillis();
 
         @Override
         public String toString() {
-            return "Message count: " + counter;
+            long elapsed = System.currentTimeMillis() - startTime;
+            Float ratePerSec = elapsed > 0 ? 1000 * (float)counter / (float)elapsed : Float.NaN;
+
+            return "Message rate msg/sec: " + ratePerSec + " (total: " + counter + ")";
         }
     }
 
