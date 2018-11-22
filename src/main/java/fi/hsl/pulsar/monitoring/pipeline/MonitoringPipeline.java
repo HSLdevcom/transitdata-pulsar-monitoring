@@ -1,16 +1,20 @@
 package fi.hsl.pulsar.monitoring.pipeline;
 
 import com.google.transit.realtime.GtfsRealtime;
+import com.sun.xml.internal.bind.v2.util.CollisionCheckStack;
 import fi.hsl.common.pulsar.IMessageHandler;
 import fi.hsl.common.transitdata.TransitdataProperties;
 import org.apache.pulsar.client.api.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class MonitoringPipeline implements IMessageHandler {
     private static final Logger log = LoggerFactory.getLogger(MonitoringPipeline.class);
@@ -20,7 +24,7 @@ public class MonitoringPipeline implements IMessageHandler {
     final ScheduledExecutorService scheduler;
 
     private MonitoringPipeline(int pollIntervalSecs) {
-        tripUpdatePipeline = new TripUpdateCounter();
+        tripUpdatePipeline = new TripUpdateCounter(new RouteCounter());
 
         scheduler = Executors.newSingleThreadScheduledExecutor();
         log.info("Starting scheduler");
@@ -40,10 +44,23 @@ public class MonitoringPipeline implements IMessageHandler {
         parseProtobufSchema(msg).ifPresent(schema -> {
             try {
                 if (schema == TransitdataProperties.ProtobufSchema.GTFS_TripUpdate) {
-                    GtfsRealtime.TripUpdate tu = GtfsRealtime.TripUpdate.parseFrom(msg.getData());
-                    if (tripUpdatePipeline != null) {
+                    GtfsRealtime.FeedMessage feedMessage = GtfsRealtime.FeedMessage.parseFrom(msg.getData());
+
+                    List<GtfsRealtime.TripUpdate> tripUpdates = feedMessage.getEntityList()
+                            .stream()
+                            .flatMap(
+                                entity -> entity.hasTripUpdate() ? Stream.of(entity.getTripUpdate()) : Stream.empty()
+                            ).collect(Collectors.toList());
+
+                    for (GtfsRealtime.TripUpdate tu : tripUpdates) {
                         context = tripUpdatePipeline.handleMessage(context, tu);
                     }
+                    /*tripUpdates.forEach(tu -> {
+                        context = tripUpdatePipeline.handleMessage(context, tu);
+                    });*/
+                    /*if (tripUpdatePipeline != null) {
+                        context = tripUpdatePipeline.handleMessage(context, feedMessage.getEntity(0).getTripUpdate());
+                    }*/
                 }
                 else {
                     log.info("Ignoring message of schema " + schema);
