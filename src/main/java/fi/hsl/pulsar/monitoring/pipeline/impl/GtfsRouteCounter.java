@@ -2,6 +2,7 @@ package fi.hsl.pulsar.monitoring.pipeline.impl;
 
 import com.google.transit.realtime.GtfsRealtime;
 import fi.hsl.pulsar.monitoring.pipeline.PipelineContext;
+import fi.hsl.pulsar.monitoring.pipeline.PipelineResult;
 import fi.hsl.pulsar.monitoring.pipeline.PipelineStep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,7 +13,7 @@ import java.util.stream.Collectors;
 public class GtfsRouteCounter extends PipelineStep<GtfsRealtime.TripUpdate> {
     private static final Logger log = LoggerFactory.getLogger(GtfsRouteCounter.class);
 
-    class RouteCountResults implements PipelineContext.PipelineResult {
+    class RouteCountResults implements PipelineResult {
 
         private static final int PRINT_TOP_COUNT = 5;
 
@@ -29,9 +30,9 @@ public class GtfsRouteCounter extends PipelineStep<GtfsRealtime.TripUpdate> {
         }
 
         @Override
-        public String toString() {
+        public List<String> results() {
+            List<String> results = new LinkedList<>();
             try {
-
                 int numberOfRoutes = routes.keySet().size();
 
                 List<Map.Entry<String, Long>> entries = routes.entrySet()
@@ -40,16 +41,16 @@ public class GtfsRouteCounter extends PipelineStep<GtfsRealtime.TripUpdate> {
                         .limit(PRINT_TOP_COUNT)
                         .collect(Collectors.toList());
 
-                StringBuilder builder = new StringBuilder();
-                builder.append("No of routes total: ").append(numberOfRoutes).append("\n");
-                builder.append("Top ").append(PRINT_TOP_COUNT).append(" routes are: \n");
-                entries.forEach(entry -> builder.append(entry.getKey()).append(" : ").append(entry.getValue()).append("\n"));
-                return builder.toString();
+                results.add("No of different routes in total: " + numberOfRoutes);
+                results.add("Top " + PRINT_TOP_COUNT + " routes are:");
+                results.addAll(entries.stream().map(entry ->
+                        entry.getKey() + " : " + entry.getValue())
+                    .collect(Collectors.toList()));
             }
             catch (Exception e) {
-                return "ERROR: " + e.getMessage();
+                log.error("Failed to build RouteCountResults", e);
             }
-
+            return results;
         }
     }
 

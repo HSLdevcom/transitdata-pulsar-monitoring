@@ -1,14 +1,11 @@
 package fi.hsl.pulsar.monitoring.pipeline;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class PipelineContext {
-
-    public interface PipelineResult {
-        void clear();
-        @Override
-        String toString();
-    }
 
     HashMap<PipelineStep, PipelineResult> resultsPerStep = new HashMap<>();
 
@@ -28,20 +25,16 @@ public class PipelineContext {
         return resultsPerStep.get(owner);
     }
 
-    public synchronized String resultsAsString() {
-        StringBuilder builder = new StringBuilder();
-        resultsPerStep.entrySet().forEach(
-                entry -> builder.append(entry.getKey().getClass().getSimpleName())
-                .append(" : ")
-                .append(entry.getValue().toString())
-                .append("\n")
-        );
-
-        return builder.toString();
+    public synchronized List<String> resultsAsString() {
+        return resultsPerStep.entrySet().stream().flatMap(
+                entry -> entry.getValue().results().stream()
+                        .map(resultRow ->
+                            entry.getKey().getClass().getSimpleName() + " : " + resultRow)
+        ).collect(Collectors.toList());
     }
 
-    public synchronized String getResultsAndClear() {
-        String results = resultsAsString();
+    public synchronized List<String> getResultsAndClear() {
+        List<String> results = resultsAsString();
         clearResults();
         return results;
     }

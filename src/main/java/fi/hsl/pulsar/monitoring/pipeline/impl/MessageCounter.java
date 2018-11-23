@@ -1,9 +1,14 @@
 package fi.hsl.pulsar.monitoring.pipeline.impl;
 
 import fi.hsl.pulsar.monitoring.pipeline.PipelineContext;
+import fi.hsl.pulsar.monitoring.pipeline.PipelineResult;
 import fi.hsl.pulsar.monitoring.pipeline.PipelineStep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class MessageCounter extends PipelineStep<Object> {
     private static final Logger log = LoggerFactory.getLogger(MessageCounter.class);
@@ -17,7 +22,7 @@ public class MessageCounter extends PipelineStep<Object> {
     }
 
 
-    class CountResults implements PipelineContext.PipelineResult {
+    class CountResults implements PipelineResult {
         long counter;
         long startTime = System.currentTimeMillis();
 
@@ -28,11 +33,11 @@ public class MessageCounter extends PipelineStep<Object> {
         }
 
         @Override
-        public String toString() {
+        public List<String> results() {
             long elapsed = System.currentTimeMillis() - startTime;
             Float ratePerSec = elapsed > 0 ? 1000 * (float)counter / (float)elapsed : Float.NaN;
 
-            return "Message rate msg/sec: " + ratePerSec + " (total: " + counter + ")";
+            return Arrays.asList("Message rate msg/sec: " + ratePerSec + " (total: " + counter + ")");
         }
     }
 

@@ -31,8 +31,8 @@ public class MonitoringPipeline implements IMessageHandler {
         log.info("Starting result-scheduler");
 
         scheduler.scheduleAtFixedRate(() -> {
-            String results = context.getResultsAndClear();
-            log.info(results);
+            List<String> results = context.getResultsAndClear();
+            results.forEach(r -> log.info(r));
         }, pollIntervalSecs, pollIntervalSecs, TimeUnit.SECONDS);
     }
 
