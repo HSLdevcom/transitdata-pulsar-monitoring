@@ -1,17 +1,16 @@
 package fi.hsl.pulsar.monitoring.pipeline;
 
-import com.google.transit.realtime.GtfsRealtime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TripUpdateCounter extends PipelineStep<GtfsRealtime.TripUpdate> {
-    private static final Logger log = LoggerFactory.getLogger(TripUpdateCounter.class);
+public class MessageCounter extends PipelineStep<Object> {
+    private static final Logger log = LoggerFactory.getLogger(MessageCounter.class);
 
-    public TripUpdateCounter() {
+    public MessageCounter() {
         super();
     }
 
-    public TripUpdateCounter(PipelineStep parent) {
+    public MessageCounter(PipelineStep parent) {
         super(parent);
     }
 
@@ -36,7 +35,7 @@ public class TripUpdateCounter extends PipelineStep<GtfsRealtime.TripUpdate> {
     }
 
     @Override
-    PipelineContext handleInternal(PipelineContext context, GtfsRealtime.TripUpdate msg) {
+    PipelineContext handleInternal(PipelineContext context, Object msg) {
         CountResults results = (CountResults)context.getResults(this);
         if (results == null) {
             results = new CountResults();

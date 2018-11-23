@@ -18,12 +18,12 @@ import java.util.stream.Stream;
 public class MonitoringPipeline implements IMessageHandler {
     private static final Logger log = LoggerFactory.getLogger(MonitoringPipeline.class);
 
-    private TripUpdateCounter tripUpdatePipeline;
+    private MessageCounter tripUpdatePipeline;
     private PipelineContext context = new PipelineContext();
     final ScheduledExecutorService scheduler;
 
     private MonitoringPipeline(int pollIntervalSecs) {
-        tripUpdatePipeline = new TripUpdateCounter(new RouteCounter());
+        tripUpdatePipeline = new MessageCounter(new RouteCounter());
 
         scheduler = Executors.newSingleThreadScheduledExecutor();
         log.info("Starting result-scheduler");
