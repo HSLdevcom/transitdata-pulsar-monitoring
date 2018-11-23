@@ -1,5 +1,7 @@
-package fi.hsl.pulsar.monitoring.pipeline;
+package fi.hsl.pulsar.monitoring.pipeline.impl;
 
+import fi.hsl.pulsar.monitoring.pipeline.PipelineContext;
+import fi.hsl.pulsar.monitoring.pipeline.PipelineStep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +37,7 @@ public class MessageCounter extends PipelineStep<Object> {
     }
 
     @Override
-    PipelineContext handleInternal(PipelineContext context, Object msg) {
+    protected PipelineContext handleInternal(PipelineContext context, Object msg) {
         CountResults results = (CountResults)context.getResults(this);
         if (results == null) {
             results = new CountResults();

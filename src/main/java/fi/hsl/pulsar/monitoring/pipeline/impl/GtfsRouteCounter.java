@@ -1,15 +1,16 @@
-package fi.hsl.pulsar.monitoring.pipeline;
+package fi.hsl.pulsar.monitoring.pipeline.impl;
 
 import com.google.transit.realtime.GtfsRealtime;
-import org.apache.pulsar.shade.com.google.common.collect.Comparators;
+import fi.hsl.pulsar.monitoring.pipeline.PipelineContext;
+import fi.hsl.pulsar.monitoring.pipeline.PipelineStep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class RouteCounter extends PipelineStep<GtfsRealtime.TripUpdate> {
-    private static final Logger log = LoggerFactory.getLogger(RouteCounter.class);
+public class GtfsRouteCounter extends PipelineStep<GtfsRealtime.TripUpdate> {
+    private static final Logger log = LoggerFactory.getLogger(GtfsRouteCounter.class);
 
     class RouteCountResults implements PipelineContext.PipelineResult {
 
@@ -53,7 +54,7 @@ public class RouteCounter extends PipelineStep<GtfsRealtime.TripUpdate> {
     }
 
     @Override
-    PipelineContext handleInternal(PipelineContext context, GtfsRealtime.TripUpdate msg) {
+    protected PipelineContext handleInternal(PipelineContext context, GtfsRealtime.TripUpdate msg) {
         RouteCountResults results = (RouteCountResults)context.getResults(this);
         if (results == null) {
             results = new RouteCountResults();

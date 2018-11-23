@@ -3,6 +3,8 @@ package fi.hsl.pulsar.monitoring.pipeline;
 import com.google.transit.realtime.GtfsRealtime;
 import fi.hsl.common.pulsar.IMessageHandler;
 import fi.hsl.common.transitdata.TransitdataProperties;
+import fi.hsl.pulsar.monitoring.pipeline.impl.GtfsRouteCounter;
+import fi.hsl.pulsar.monitoring.pipeline.impl.MessageCounter;
 import org.apache.pulsar.client.api.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +25,7 @@ public class MonitoringPipeline implements IMessageHandler {
     final ScheduledExecutorService scheduler;
 
     private MonitoringPipeline(int pollIntervalSecs) {
-        tripUpdatePipeline = new MessageCounter(new RouteCounter());
+        tripUpdatePipeline = new MessageCounter(new GtfsRouteCounter());
 
         scheduler = Executors.newSingleThreadScheduledExecutor();
         log.info("Starting result-scheduler");

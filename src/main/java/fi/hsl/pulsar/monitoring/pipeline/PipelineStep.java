@@ -21,6 +21,6 @@ public abstract class PipelineStep<T> {
         return handleInternal(context, msg);
     }
 
-    abstract PipelineContext handleInternal(PipelineContext context, T msg);
+    protected abstract PipelineContext handleInternal(PipelineContext context, T msg);
 
 }
