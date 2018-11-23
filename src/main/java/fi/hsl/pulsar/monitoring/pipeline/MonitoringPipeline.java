@@ -1,7 +1,6 @@
 package fi.hsl.pulsar.monitoring.pipeline;
 
 import com.google.transit.realtime.GtfsRealtime;
-import com.sun.xml.internal.bind.v2.util.CollisionCheckStack;
 import fi.hsl.common.pulsar.IMessageHandler;
 import fi.hsl.common.transitdata.TransitdataProperties;
 import org.apache.pulsar.client.api.Message;
@@ -27,7 +26,7 @@ public class MonitoringPipeline implements IMessageHandler {
         tripUpdatePipeline = new TripUpdateCounter(new RouteCounter());
 
         scheduler = Executors.newSingleThreadScheduledExecutor();
-        log.info("Starting scheduler");
+        log.info("Starting result-scheduler");
 
         scheduler.scheduleAtFixedRate(() -> {
             String results = context.getResultsAndClear();
@@ -44,23 +43,7 @@ public class MonitoringPipeline implements IMessageHandler {
         parseProtobufSchema(msg).ifPresent(schema -> {
             try {
                 if (schema == TransitdataProperties.ProtobufSchema.GTFS_TripUpdate) {
-                    GtfsRealtime.FeedMessage feedMessage = GtfsRealtime.FeedMessage.parseFrom(msg.getData());
-
-                    List<GtfsRealtime.TripUpdate> tripUpdates = feedMessage.getEntityList()
-                            .stream()
-                            .flatMap(
-                                entity -> entity.hasTripUpdate() ? Stream.of(entity.getTripUpdate()) : Stream.empty()
-                            ).collect(Collectors.toList());
-
-                    for (GtfsRealtime.TripUpdate tu : tripUpdates) {
-                        context = tripUpdatePipeline.handleMessage(context, tu);
-                    }
-                    /*tripUpdates.forEach(tu -> {
-                        context = tripUpdatePipeline.handleMessage(context, tu);
-                    });*/
-                    /*if (tripUpdatePipeline != null) {
-                        context = tripUpdatePipeline.handleMessage(context, feedMessage.getEntity(0).getTripUpdate());
-                    }*/
+                    handleTripUpdateMessage(msg);
                 }
                 else {
                     log.info("Ignoring message of schema " + schema);
@@ -70,6 +53,20 @@ public class MonitoringPipeline implements IMessageHandler {
                 log.error("Failed to handle message for schema " + schema, e);
             }
         });
+    }
+
+    private void handleTripUpdateMessage(final Message msg) throws Exception {
+        GtfsRealtime.FeedMessage feedMessage = GtfsRealtime.FeedMessage.parseFrom(msg.getData());
+
+        List<GtfsRealtime.TripUpdate> tripUpdates = feedMessage.getEntityList()
+                .stream()
+                .flatMap(
+                        entity -> entity.hasTripUpdate() ? Stream.of(entity.getTripUpdate()) : Stream.empty()
+                ).collect(Collectors.toList());
+
+        for (GtfsRealtime.TripUpdate tu : tripUpdates) {
+            context = tripUpdatePipeline.handleMessage(context, tu);
+        }
     }
 
 
