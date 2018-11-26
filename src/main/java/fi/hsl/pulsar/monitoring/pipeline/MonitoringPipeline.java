@@ -39,8 +39,14 @@ public class MonitoringPipeline implements IMessageHandler {
         long resultIntervalInSecs = config.getInt("pipeline.resultIntervalInSecs");
         log.info("Result interval {} seconds", resultIntervalInSecs);
         pipelineSteps = new LinkedList<>();
-        pipelineSteps.add(new MessageCounter<GtfsRealtime.TripUpdate>(config));
-        pipelineSteps.add(new GtfsRouteCounter(config));
+        if (config.getBoolean("pipeline.messageCounter.enabled")) {
+            log.info("Adding MessageCounter");
+            pipelineSteps.add(new MessageCounter<GtfsRealtime.TripUpdate>(config));
+        }
+        if (config.getBoolean("pipeline.routeCounter.enabled")) {
+            log.info("Adding GtfsRouteCounter");
+            pipelineSteps.add(new GtfsRouteCounter(config));
+        }
 
         pipelineSteps.forEach(step -> step.initialize(context));
 
