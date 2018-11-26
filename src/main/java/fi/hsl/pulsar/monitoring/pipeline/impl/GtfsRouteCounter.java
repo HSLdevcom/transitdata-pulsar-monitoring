@@ -16,11 +16,7 @@ public class GtfsRouteCounter extends PipelineStep<GtfsRealtime.TripUpdate> {
     final int printTop;
 
     public GtfsRouteCounter(Config config) {
-        this(config, null);
-    }
-
-    public GtfsRouteCounter(Config config, PipelineStep parent) {
-        super(config, parent);
+        super(config);
         printTop = config.getInt("pipeline.routeCounter.printTopCount");
     }
 
@@ -78,7 +74,7 @@ public class GtfsRouteCounter extends PipelineStep<GtfsRealtime.TripUpdate> {
     }
 
     @Override
-    protected PipelineContext handleInternal(PipelineContext context, GtfsRealtime.TripUpdate msg) {
+    public PipelineContext handleMessage(PipelineContext context, GtfsRealtime.TripUpdate msg) {
         RouteCountResults results = (RouteCountResults)context.getResults(this);
         if (results == null) {
             results = new RouteCountResults(printTop);

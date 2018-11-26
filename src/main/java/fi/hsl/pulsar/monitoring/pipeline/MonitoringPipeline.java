@@ -10,8 +10,7 @@ import org.apache.pulsar.client.api.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.temporal.TemporalAmount;
-import java.time.temporal.TemporalUnit;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Executors;
@@ -23,20 +22,31 @@ import java.util.stream.Stream;
 public class MonitoringPipeline implements IMessageHandler {
     private static final Logger log = LoggerFactory.getLogger(MonitoringPipeline.class);
 
-    private MessageCounter tripUpdatePipeline;
+    /**
+     * Later we possibly want to monitor different types of messages than TripUpdates.
+     * Then either remove the type from PipelineStep (con: reduced compile time checks)
+     * or store multiple different pipelines.
+     *
+     * Perhaps best solution could be to turn this class into abstract one with type parameter T
+     * and then have different implementations per type
+     */
+    private final List<PipelineStep<GtfsRealtime.TripUpdate>> pipelineSteps;
+
     private PipelineContext context = new PipelineContext();
     final ScheduledExecutorService scheduler;
 
     private MonitoringPipeline(Config config) {
-
         long resultIntervalInSecs = config.getInt("pipeline.resultIntervalInSecs");
 
-        tripUpdatePipeline = new MessageCounter(config, new GtfsRouteCounter(config));
+        pipelineSteps = new LinkedList<>();
+        pipelineSteps.add(new MessageCounter<GtfsRealtime.TripUpdate>(config));
+        pipelineSteps.add(new GtfsRouteCounter(config));
 
         scheduler = Executors.newSingleThreadScheduledExecutor();
         log.info("Starting result-scheduler");
 
         scheduler.scheduleAtFixedRate(() -> {
+            context.getAlerts().forEach(alert -> log.error("ALERT: " + alert));
             List<String> results = context.getResultsAndClear();
             results.forEach(r -> log.info(r));
         }, resultIntervalInSecs, resultIntervalInSecs, TimeUnit.SECONDS);
@@ -73,7 +83,9 @@ public class MonitoringPipeline implements IMessageHandler {
                 ).collect(Collectors.toList());
 
         for (GtfsRealtime.TripUpdate tu : tripUpdates) {
-            context = tripUpdatePipeline.handleMessage(context, tu);
+            for (PipelineStep<GtfsRealtime.TripUpdate> step : pipelineSteps) {
+                context = step.handleMessage(context, tu);
+            }
         }
     }
 

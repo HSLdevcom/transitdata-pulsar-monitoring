@@ -8,14 +8,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.LocalTime;
-import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class MessageCounter extends PipelineStep<Object> {
+public class MessageCounter<T> extends PipelineStep<T> {
     private static final Logger log = LoggerFactory.getLogger(MessageCounter.class);
 
     final int alertThreshold;
@@ -25,11 +22,7 @@ public class MessageCounter extends PipelineStep<Object> {
     final ZoneId zoneId;
 
     public MessageCounter(Config config) {
-        this(config, null);
-    }
-
-    public MessageCounter(Config config, PipelineStep parent) {
-        super(config, parent);
+        super(config);
 
         alertActive = config.getBoolean("pipeline.messageCounter.alertActive");
         alertThreshold = config.getInt("pipeline.messageCounter.alertIfMessagesBelow");
@@ -89,7 +82,7 @@ public class MessageCounter extends PipelineStep<Object> {
     }
 
     @Override
-    protected PipelineContext handleInternal(PipelineContext context, Object msg) {
+    public PipelineContext handleMessage(PipelineContext context, T msg) {
         CountResults results = (CountResults)context.getResults(this);
         if (results == null) {
             results = new CountResults();

@@ -33,6 +33,19 @@ public class PipelineContext {
         ).collect(Collectors.toList());
     }
 
+    public synchronized List<String> getAlerts() {
+        return resultsPerStep.entrySet().stream().flatMap(
+                entry -> {
+                    PipelineResult result = entry.getValue();
+                    if (result.shouldAlert()) {
+                        return Stream.of(entry.getKey().getClass().getSimpleName() + " : " + result.alertMessage());
+                    } else {
+                        return Stream.empty();
+                    }
+                }
+        ).collect(Collectors.toList());
+    }
+
     public synchronized List<String> getResultsAndClear() {
         List<String> results = resultsAsString();
         clearResults();
