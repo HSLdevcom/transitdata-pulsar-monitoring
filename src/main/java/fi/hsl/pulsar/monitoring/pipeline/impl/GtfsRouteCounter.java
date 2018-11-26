@@ -1,6 +1,7 @@
 package fi.hsl.pulsar.monitoring.pipeline.impl;
 
 import com.google.transit.realtime.GtfsRealtime;
+import com.typesafe.config.Config;
 import fi.hsl.pulsar.monitoring.pipeline.PipelineContext;
 import fi.hsl.pulsar.monitoring.pipeline.PipelineResult;
 import fi.hsl.pulsar.monitoring.pipeline.PipelineStep;
@@ -12,12 +13,24 @@ import java.util.stream.Collectors;
 
 public class GtfsRouteCounter extends PipelineStep<GtfsRealtime.TripUpdate> {
     private static final Logger log = LoggerFactory.getLogger(GtfsRouteCounter.class);
+    final int printTop;
+
+    public GtfsRouteCounter(Config config) {
+        this(config, null);
+    }
+
+    public GtfsRouteCounter(Config config, PipelineStep parent) {
+        super(config, parent);
+        printTop = config.getInt("pipeline.routeCounter.printTopCount");
+    }
 
     class RouteCountResults implements PipelineResult {
-
-        private static final int PRINT_TOP_COUNT = 5;
-
+        final int howManyToPrint;
         HashMap<String, Long> routes = new HashMap<>();
+
+        RouteCountResults(int howManyToPrint) {
+            this.howManyToPrint = howManyToPrint;
+        }
 
         public void incRoute(String route) {
             long count = routes.getOrDefault(route, 0L);
@@ -38,11 +51,11 @@ public class GtfsRouteCounter extends PipelineStep<GtfsRealtime.TripUpdate> {
                 List<Map.Entry<String, Long>> entries = routes.entrySet()
                         .stream()
                         .sorted((entry1, entry2) -> Long.compare(entry2.getValue(), entry1.getValue()))
-                        .limit(PRINT_TOP_COUNT)
+                        .limit(howManyToPrint)
                         .collect(Collectors.toList());
 
                 results.add("No of different routes in total: " + numberOfRoutes);
-                results.add("Top " + PRINT_TOP_COUNT + " routes are:");
+                results.add("Top " + howManyToPrint + " routes are:");
                 results.addAll(entries.stream().map(entry ->
                         entry.getKey() + " : " + entry.getValue())
                     .collect(Collectors.toList()));
@@ -58,7 +71,7 @@ public class GtfsRouteCounter extends PipelineStep<GtfsRealtime.TripUpdate> {
     protected PipelineContext handleInternal(PipelineContext context, GtfsRealtime.TripUpdate msg) {
         RouteCountResults results = (RouteCountResults)context.getResults(this);
         if (results == null) {
-            results = new RouteCountResults();
+            results = new RouteCountResults(printTop);
         }
         String routeId = msg.getTrip().getRouteId();
         results.incRoute(routeId);

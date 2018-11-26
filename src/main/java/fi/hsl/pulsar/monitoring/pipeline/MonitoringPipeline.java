@@ -1,6 +1,7 @@
 package fi.hsl.pulsar.monitoring.pipeline;
 
 import com.google.transit.realtime.GtfsRealtime;
+import com.typesafe.config.Config;
 import fi.hsl.common.pulsar.IMessageHandler;
 import fi.hsl.common.transitdata.TransitdataProperties;
 import fi.hsl.pulsar.monitoring.pipeline.impl.GtfsRouteCounter;
@@ -9,6 +10,8 @@ import org.apache.pulsar.client.api.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.temporal.TemporalAmount;
+import java.time.temporal.TemporalUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Executors;
@@ -24,8 +27,11 @@ public class MonitoringPipeline implements IMessageHandler {
     private PipelineContext context = new PipelineContext();
     final ScheduledExecutorService scheduler;
 
-    private MonitoringPipeline(int pollIntervalSecs) {
-        tripUpdatePipeline = new MessageCounter(new GtfsRouteCounter());
+    private MonitoringPipeline(Config config) {
+
+        long resultIntervalInSecs = config.getInt("pipeline.resultIntervalInSecs");
+
+        tripUpdatePipeline = new MessageCounter(config, new GtfsRouteCounter(config));
 
         scheduler = Executors.newSingleThreadScheduledExecutor();
         log.info("Starting result-scheduler");
@@ -33,12 +39,12 @@ public class MonitoringPipeline implements IMessageHandler {
         scheduler.scheduleAtFixedRate(() -> {
             List<String> results = context.getResultsAndClear();
             results.forEach(r -> log.info(r));
-        }, pollIntervalSecs, pollIntervalSecs, TimeUnit.SECONDS);
+        }, resultIntervalInSecs, resultIntervalInSecs, TimeUnit.SECONDS);
     }
 
-    public static MonitoringPipeline newPipeline() {
+    public static MonitoringPipeline newPipeline(Config config) {
         //We could initialize different pipelines based on configs / arguments
-        return new MonitoringPipeline(10);
+        return new MonitoringPipeline(config);
     }
 
     public void handleMessage(final Message msg) throws Exception {

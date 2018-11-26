@@ -1,5 +1,6 @@
 package fi.hsl.pulsar.monitoring.pipeline.impl;
 
+import com.typesafe.config.Config;
 import fi.hsl.pulsar.monitoring.pipeline.PipelineContext;
 import fi.hsl.pulsar.monitoring.pipeline.PipelineResult;
 import fi.hsl.pulsar.monitoring.pipeline.PipelineStep;
@@ -13,12 +14,12 @@ import java.util.List;
 public class MessageCounter extends PipelineStep<Object> {
     private static final Logger log = LoggerFactory.getLogger(MessageCounter.class);
 
-    public MessageCounter() {
-        super();
+    public MessageCounter(Config config) {
+        super(config);
     }
 
-    public MessageCounter(PipelineStep parent) {
-        super(parent);
+    public MessageCounter(Config config, PipelineStep parent) {
+        super(config, parent);
     }
 
 

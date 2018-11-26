@@ -1,6 +1,8 @@
 package fi.hsl.pulsar.monitoring;
 
+import com.typesafe.config.Config;
 import fi.hsl.common.pulsar.IMessageHandler;
+import fi.hsl.common.pulsar.PulsarApplicationContext;
 import fi.hsl.pulsar.monitoring.pipeline.MonitoringPipeline;
 import org.apache.pulsar.client.api.*;
 import org.slf4j.Logger;
@@ -13,9 +15,9 @@ public class MessageProcessor implements IMessageHandler {
     private Consumer<byte[]> consumer;
     private MonitoringPipeline pipeline;
 
-    public MessageProcessor(Consumer<byte[]> consumer) {
-        this.consumer = consumer;
-        pipeline = MonitoringPipeline.newPipeline();
+    public MessageProcessor(PulsarApplicationContext context) {
+        this.consumer = context.getConsumer();
+        pipeline = MonitoringPipeline.newPipeline(context.getConfig());
     }
 
     @Override
