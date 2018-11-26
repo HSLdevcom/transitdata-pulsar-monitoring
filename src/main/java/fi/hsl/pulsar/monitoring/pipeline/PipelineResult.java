@@ -6,4 +6,8 @@ public interface PipelineResult {
     void clear();
 
     List<String> results();
+
+    boolean shouldAlert();
+
+    String alertMessage();
 }

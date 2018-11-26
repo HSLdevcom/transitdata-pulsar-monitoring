@@ -65,6 +65,16 @@ public class GtfsRouteCounter extends PipelineStep<GtfsRealtime.TripUpdate> {
             }
             return results;
         }
+
+        @Override
+        public boolean shouldAlert() {
+            return false;
+        }
+
+        @Override
+        public String alertMessage() {
+            return "no alerts";
+        }
     }
 
     @Override
