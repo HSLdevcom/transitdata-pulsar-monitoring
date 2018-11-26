@@ -20,6 +20,11 @@ public class GtfsRouteCounter extends PipelineStep<GtfsRealtime.TripUpdate> {
         printTop = config.getInt("pipeline.routeCounter.printTopCount");
     }
 
+    @Override
+    public void initialize(PipelineContext context) {
+        context.setResults(this, new RouteCountResults(printTop));
+    }
+
     class RouteCountResults implements PipelineResult {
         final int howManyToPrint;
         HashMap<String, Long> routes = new HashMap<>();
@@ -74,7 +79,7 @@ public class GtfsRouteCounter extends PipelineStep<GtfsRealtime.TripUpdate> {
     }
 
     @Override
-    public PipelineContext handleMessage(PipelineContext context, GtfsRealtime.TripUpdate msg) {
+    public void handleMessage(PipelineContext context, GtfsRealtime.TripUpdate msg) {
         RouteCountResults results = (RouteCountResults)context.getResults(this);
         if (results == null) {
             results = new RouteCountResults(printTop);
@@ -83,6 +88,5 @@ public class GtfsRouteCounter extends PipelineStep<GtfsRealtime.TripUpdate> {
         results.incRoute(routeId);
 
         context.setResults(this, results);
-        return context;
     }
 }

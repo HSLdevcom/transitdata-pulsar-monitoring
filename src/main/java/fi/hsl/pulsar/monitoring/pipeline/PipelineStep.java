@@ -9,5 +9,7 @@ public abstract class PipelineStep<T> {
         this.config = config;
     }
 
-    public abstract PipelineContext handleMessage(PipelineContext context, T msg);
+    public abstract void initialize(PipelineContext context);
+
+    public abstract void handleMessage(PipelineContext context, T msg);
 }

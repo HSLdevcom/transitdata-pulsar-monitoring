@@ -32,23 +32,32 @@ public class MonitoringPipeline implements IMessageHandler {
      */
     private final List<PipelineStep<GtfsRealtime.TripUpdate>> pipelineSteps;
 
-    private PipelineContext context = new PipelineContext();
+    private final PipelineContext context = new PipelineContext();
     final ScheduledExecutorService scheduler;
 
     private MonitoringPipeline(Config config) {
         long resultIntervalInSecs = config.getInt("pipeline.resultIntervalInSecs");
-
+        log.info("Result interval {} seconds", resultIntervalInSecs);
         pipelineSteps = new LinkedList<>();
         pipelineSteps.add(new MessageCounter<GtfsRealtime.TripUpdate>(config));
         pipelineSteps.add(new GtfsRouteCounter(config));
+
+        pipelineSteps.forEach(step -> step.initialize(context));
 
         scheduler = Executors.newSingleThreadScheduledExecutor();
         log.info("Starting result-scheduler");
 
         scheduler.scheduleAtFixedRate(() -> {
-            context.getAlerts().forEach(alert -> log.error("ALERT: " + alert));
-            List<String> results = context.getResultsAndClear();
-            results.forEach(r -> log.info(r));
+            try {
+                log.debug("Checking results!");
+                context.getAlerts().forEach(alert -> log.error("ALERT: " + alert));
+                List<String> results = context.getResultsAndClear();
+                results.forEach(r -> log.info(r));
+            }
+            catch (Exception e) {
+                log.error("Failed to check results", e);
+            }
+
         }, resultIntervalInSecs, resultIntervalInSecs, TimeUnit.SECONDS);
     }
 
@@ -84,7 +93,7 @@ public class MonitoringPipeline implements IMessageHandler {
 
         for (GtfsRealtime.TripUpdate tu : tripUpdates) {
             for (PipelineStep<GtfsRealtime.TripUpdate> step : pipelineSteps) {
-                context = step.handleMessage(context, tu);
+                step.handleMessage(context, tu);
             }
         }
     }

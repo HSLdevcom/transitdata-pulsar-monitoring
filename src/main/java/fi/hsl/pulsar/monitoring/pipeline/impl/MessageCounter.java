@@ -37,6 +37,11 @@ public class MessageCounter<T> extends PipelineStep<T> {
         }
     }
 
+    @Override
+    public void initialize(PipelineContext context) {
+        context.setResults(this, new CountResults());
+    }
+
     static boolean isBetween(LocalTime now, LocalTime start, LocalTime end) {
         if (start.isBefore(end)) {
             return now.isAfter(start) && now.isBefore(end);
@@ -82,7 +87,7 @@ public class MessageCounter<T> extends PipelineStep<T> {
     }
 
     @Override
-    public PipelineContext handleMessage(PipelineContext context, T msg) {
+    public void handleMessage(PipelineContext context, T msg) {
         CountResults results = (CountResults)context.getResults(this);
         if (results == null) {
             results = new CountResults();
@@ -90,6 +95,5 @@ public class MessageCounter<T> extends PipelineStep<T> {
         results.counter++;
 
         context.setResults(this, results);
-        return context;
     }
 }
