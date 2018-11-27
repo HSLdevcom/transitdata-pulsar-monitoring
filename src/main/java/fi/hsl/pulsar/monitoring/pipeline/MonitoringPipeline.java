@@ -4,6 +4,7 @@ import com.google.transit.realtime.GtfsRealtime;
 import com.typesafe.config.Config;
 import fi.hsl.common.pulsar.IMessageHandler;
 import fi.hsl.common.transitdata.TransitdataProperties;
+import fi.hsl.pulsar.monitoring.pipeline.impl.GtfsDelayCounter;
 import fi.hsl.pulsar.monitoring.pipeline.impl.GtfsRouteCounter;
 import fi.hsl.pulsar.monitoring.pipeline.impl.MessageCounter;
 import org.apache.pulsar.client.api.Message;
@@ -42,6 +43,10 @@ public class MonitoringPipeline implements IMessageHandler {
         if (config.getBoolean("pipeline.messageCounter.enabled")) {
             log.info("Adding MessageCounter");
             pipelineSteps.add(new MessageCounter<GtfsRealtime.TripUpdate>(config));
+        }
+        if (config.getBoolean("pipeline.delayCounter.enabled")) {
+            log.info("Adding DelayCounter");
+            pipelineSteps.add(new GtfsDelayCounter(config));
         }
         if (config.getBoolean("pipeline.routeCounter.enabled")) {
             log.info("Adding GtfsRouteCounter");
