@@ -15,10 +15,13 @@ public class GtfsDelayCounter extends PipelineStep<GtfsRealtime.TripUpdate> {
 
     private static final Logger log = LoggerFactory.getLogger(GtfsDelayCounter.class);
     final int maxDelayMs;
+    final boolean ignoreCancellations;
 
     public GtfsDelayCounter(Config config) {
         super(config);
         maxDelayMs = config.getInt("pipeline.delayCounter.maxDelayInMs");
+        ignoreCancellations = config.getBoolean("pipeline.delayCounter.ignoreCancellations");
+        log.info("DelayCounter alerting with maxDelay {}. ignoring cancellations? {}", maxDelayMs, ignoreCancellations);
     }
 
     @Override
@@ -82,6 +85,10 @@ public class GtfsDelayCounter extends PipelineStep<GtfsRealtime.TripUpdate> {
 
     @Override
     public void handleMessage(PipelineContext context, GtfsRealtime.TripUpdate msg) {
+        //The cancellation trips are sent continuously in our pipeline so it might make sense to ignore those
+        if (ignoreCancellations && msg.getTrip().getScheduleRelationship() == GtfsRealtime.TripDescriptor.ScheduleRelationship.CANCELED)
+            return;
+
         DelayResults results = (DelayResults)context.getResults(this);
         if (results == null) {
             results = new DelayResults(maxDelayMs);
