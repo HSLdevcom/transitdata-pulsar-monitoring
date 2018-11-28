@@ -32,7 +32,7 @@ public class GtfsDelayCounter extends PipelineStep<GtfsRealtime.TripUpdate> {
     public static class DelayResults implements PipelineResult {
         final int maxDelayMs;
 
-        public static final int[] binsMs = {2, 5, 10, 20, 50, 100, 500, 1000, 5000, Integer.MAX_VALUE };
+        public static final long[] binsMs = {10L, 50L, 100L, 500L, 1000L, 2500L, 5000L, 7500L, 10000L, 15000L, Integer.MAX_VALUE };
         long [] histogram = new long[binsMs.length];
         int overMaxCounter = 0;
 
