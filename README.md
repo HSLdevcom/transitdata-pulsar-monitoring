@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/HSLdevcom/transitdata-pulsar-monitoring.svg?branch=master)](https://travis-ci.org/HSLdevcom/transitdata-pulsar-monitoring)
+
 ## Description
 
 Application for monitoring Pulsar messages and their custom payloads in Transitdata pipeline.
