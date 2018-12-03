@@ -1,2 +1,2 @@
 #!/bin/bash
-docker build -t transitdata-pulsar-monitoring .
+docker build -t hsldevcom/transitdata-pulsar-monitoring .
