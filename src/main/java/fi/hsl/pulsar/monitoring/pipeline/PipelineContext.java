@@ -1,11 +1,19 @@
 package fi.hsl.pulsar.monitoring.pipeline;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.apache.pulsar.shade.com.google.gson.JsonObject;
+import org.apache.pulsar.shade.org.apache.avro.data.Json;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class PipelineContext {
+    private final ObjectMapper mapper = new ObjectMapper();
 
     HashMap<PipelineStep, PipelineResult> resultsPerStep = new HashMap<>();
 
@@ -25,12 +33,26 @@ public class PipelineContext {
         return resultsPerStep.get(owner);
     }
 
-    public synchronized List<String> resultsAsString() {
-        return resultsPerStep.entrySet().stream().flatMap(
+    public synchronized String resultsAsString() {
+        List<JsonNode> nodes = resultsPerStep.entrySet().stream().flatMap(
+                entry -> entry.getValue().results().stream()).collect(Collectors.toList());
+        ArrayNode root = mapper.createArrayNode();
+        root.addAll(nodes);
+        try {
+            return mapper.writeValueAsString(root);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return e.getMessage();
+        }
+
+
+        /*return resultsPerStep.entrySet().stream().flatMap(
                 entry -> entry.getValue().results().stream()
                         .map(resultRow ->
                             entry.getKey().getClass().getSimpleName() + " : " + resultRow)
-        ).collect(Collectors.toList());
+        ).collect(Collectors.toList());*/
+
     }
 
     public synchronized List<String> getAlerts() {
@@ -46,8 +68,8 @@ public class PipelineContext {
         ).collect(Collectors.toList());
     }
 
-    public synchronized List<String> getResultsAndClear() {
-        List<String> results = resultsAsString();
+    public synchronized String getResultsAndClear() {
+        String results = resultsAsString();
         clearResults();
         return results;
     }

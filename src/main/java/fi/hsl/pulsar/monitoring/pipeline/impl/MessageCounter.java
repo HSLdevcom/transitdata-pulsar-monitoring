@@ -1,5 +1,8 @@
 package fi.hsl.pulsar.monitoring.pipeline.impl;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.typesafe.config.Config;
 import fi.hsl.pulsar.monitoring.pipeline.PipelineContext;
 import fi.hsl.pulsar.monitoring.pipeline.PipelineResult;
@@ -57,6 +60,18 @@ public class MessageCounter<T> extends PipelineStep<T> {
         return isBetween(now, activeStart, activeEnd);
     }
 
+    class CountResultsJson {
+        public long messageCount;
+        public long elapsedMs;
+        public float messagesPerSecond;
+
+        public CountResultsJson(long count, long elapsed, float rate) {
+            messageCount = count;
+            elapsedMs = elapsed;
+            messagesPerSecond = rate;
+        }
+    }
+
     class CountResults implements PipelineResult {
         long counter;
         long startTime = System.currentTimeMillis();
@@ -68,11 +83,14 @@ public class MessageCounter<T> extends PipelineStep<T> {
         }
 
         @Override
-        public List<String> results() {
+        public List<JsonNode> results() {
             long elapsed = System.currentTimeMillis() - startTime;
             Float ratePerSec = elapsed > 0 ? 1000 * (float)counter / (float)elapsed : Float.NaN;
-
-            return Arrays.asList("Message rate msg/sec: " + ratePerSec + " (total: " + counter + ")");
+            CountResultsJson data = new CountResultsJson(counter, elapsed, ratePerSec);
+            JsonNode node = mapper.valueToTree(data);
+            //JsonNode node = JsonNodeFactory.instance.objectNode();
+            return Arrays.asList(node);
+            //return Arrays.asList("Message rate msg/sec: " + ratePerSec + " (total: " + counter + ")");
         }
 
         @Override

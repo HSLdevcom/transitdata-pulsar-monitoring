@@ -5,7 +5,6 @@ import com.typesafe.config.Config;
 import fi.hsl.common.pulsar.IMessageHandler;
 import fi.hsl.common.transitdata.TransitdataProperties;
 import fi.hsl.pulsar.monitoring.pipeline.impl.GtfsDelayCounter;
-import fi.hsl.pulsar.monitoring.pipeline.impl.GtfsRouteCounter;
 import fi.hsl.pulsar.monitoring.pipeline.impl.MessageCounter;
 import org.apache.pulsar.client.api.Message;
 import org.slf4j.Logger;
@@ -48,10 +47,6 @@ public class MonitoringPipeline implements IMessageHandler {
             log.info("Adding DelayCounter");
             pipelineSteps.add(new GtfsDelayCounter(config));
         }
-        if (config.getBoolean("pipeline.routeCounter.enabled")) {
-            log.info("Adding GtfsRouteCounter");
-            pipelineSteps.add(new GtfsRouteCounter(config));
-        }
 
         pipelineSteps.forEach(step -> step.initialize(context));
 
@@ -62,8 +57,9 @@ public class MonitoringPipeline implements IMessageHandler {
             try {
                 log.debug("Checking results!");
                 context.getAlerts().forEach(alert -> log.error("ALERT: " + alert));
-                List<String> results = context.getResultsAndClear();
-                results.forEach(r -> log.info(r));
+                //List<String> results = context.getResultsAndClear();
+                //results.forEach(r -> log.info(r));
+                log.info(context.getResultsAndClear());
             }
             catch (Exception e) {
                 log.error("Failed to check results", e);

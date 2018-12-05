@@ -1,5 +1,9 @@
 package fi.hsl.pulsar.monitoring.pipeline.impl;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.NumericNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.transit.realtime.GtfsRealtime;
 import com.typesafe.config.Config;
 import fi.hsl.pulsar.monitoring.pipeline.PipelineContext;
@@ -28,11 +32,11 @@ public class GtfsDelayCounter extends PipelineStep<GtfsRealtime.TripUpdate> {
     public void initialize(PipelineContext context) {
         context.setResults(this, new DelayResults(maxDelayMs));
     }
+    public static final long[] binsMs = {10L, 50L, 100L, 500L, 1000L, 2500L, 5000L, 7500L, 10000L, 15000L, Integer.MAX_VALUE };
 
-    public static class DelayResults implements PipelineResult {
+    public class DelayResults implements PipelineResult {
         final int maxDelayMs;
 
-        public static final long[] binsMs = {10L, 50L, 100L, 500L, 1000L, 2500L, 5000L, 7500L, 10000L, 15000L, Integer.MAX_VALUE };
         long [] histogram = new long[binsMs.length];
         int overMaxCounter = 0;
 
@@ -48,7 +52,7 @@ public class GtfsDelayCounter extends PipelineStep<GtfsRealtime.TripUpdate> {
             }
         }
 
-        public static int findBinIndex(long delayMs) {
+        public int findBinIndex(long delayMs) {
             for (int index = 0; index < binsMs.length; index++) {
                 if (delayMs < binsMs[index]) {
                     return index;
@@ -65,10 +69,14 @@ public class GtfsDelayCounter extends PipelineStep<GtfsRealtime.TripUpdate> {
         }
 
         @Override
-        public List<String> results() {
-            List<String> results = new LinkedList<>();
-            results.add("Delay spread: " + Arrays.toString(histogram) + " (bins: " + Arrays.toString(binsMs) + ")");
-            return results;
+        public List<JsonNode> results() {
+            NumericNode value = JsonNodeFactory.instance.numberNode(overMaxCounter);
+            ObjectNode node = JsonNodeFactory.instance.objectNode();
+            node.set("maxCounter", value);
+            return Arrays.asList(node);
+            //List<String> results = new LinkedList<>();
+            //results.add("Delay spread: " + Arrays.toString(histogram) + " (bins: " + Arrays.toString(binsMs) + ")");
+            //return results;
         }
 
         @Override
