@@ -69,11 +69,11 @@ public class GtfsDelayCounter extends PipelineStep<GtfsRealtime.TripUpdate> {
         }
 
         @Override
-        public List<JsonNode> results() {
+        public JsonNode results() {
             NumericNode value = JsonNodeFactory.instance.numberNode(overMaxCounter);
             ObjectNode node = JsonNodeFactory.instance.objectNode();
             node.set("maxCounter", value);
-            return Arrays.asList(node);
+            return node;
             //List<String> results = new LinkedList<>();
             //results.add("Delay spread: " + Arrays.toString(histogram) + " (bins: " + Arrays.toString(binsMs) + ")");
             //return results;

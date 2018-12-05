@@ -83,13 +83,12 @@ public class MessageCounter<T> extends PipelineStep<T> {
         }
 
         @Override
-        public List<JsonNode> results() {
+        public JsonNode results() {
             long elapsed = System.currentTimeMillis() - startTime;
             Float ratePerSec = elapsed > 0 ? 1000 * (float)counter / (float)elapsed : Float.NaN;
             CountResultsJson data = new CountResultsJson(counter, elapsed, ratePerSec);
             JsonNode node = mapper.valueToTree(data);
-            //JsonNode node = JsonNodeFactory.instance.objectNode();
-            return Arrays.asList(node);
+            return node;
             //return Arrays.asList("Message rate msg/sec: " + ratePerSec + " (total: " + counter + ")");
         }
 

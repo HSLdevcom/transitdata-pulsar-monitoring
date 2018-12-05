@@ -34,10 +34,16 @@ public class PipelineContext {
     }
 
     public synchronized String resultsAsString() {
-        List<JsonNode> nodes = resultsPerStep.entrySet().stream().flatMap(
+        ObjectNode root = mapper.createObjectNode();
+        resultsPerStep.forEach((key, value) -> {
+            root.set(key.getClass().getSimpleName(), value.results());
+        });
+        /*List<JsonNode> nodes = resultsPerStep.entrySet().stream().flatMap(
                 entry -> entry.getValue().results().stream()).collect(Collectors.toList());
-        ArrayNode root = mapper.createArrayNode();
-        root.addAll(nodes);
+        ArrayNode root = mapper.createArrayNode();*/
+
+        //node.set()
+        //root.addAll(nodes);
         try {
             return mapper.writeValueAsString(root);
         }
@@ -45,8 +51,6 @@ public class PipelineContext {
             e.printStackTrace();
             return e.getMessage();
         }
-
-
         /*return resultsPerStep.entrySet().stream().flatMap(
                 entry -> entry.getValue().results().stream()
                         .map(resultRow ->
