@@ -32,15 +32,24 @@ public class GtfsDelayCounter extends PipelineStep<GtfsRealtime.TripUpdate> {
     public static class DelayResults implements PipelineResult {
         final int maxDelayMs;
 
-        public static final long[] binsMs = {10L, 50L, 100L, 500L, 1000L, 2500L, 5000L, 7500L, 10000L, 15000L, Integer.MAX_VALUE };
+        public static final long[] binsMs = {10L, 100L, 500L, 1000L, 2500L, 5000L, 10000L, 15000L, 20000L,  30000L, 60000L, Integer.MAX_VALUE };
         long [] histogram = new long[binsMs.length];
         int overMaxCounter = 0;
+        long min = Long.MAX_VALUE;
+        long max = 0L;
 
         DelayResults(int maxDelayMs) {
             this.maxDelayMs = maxDelayMs;
         }
 
         public void addSample(long delayMs) {
+            if (delayMs < min) {
+                min = delayMs;
+            }
+            if (delayMs > max) {
+                max = delayMs;
+            }
+
             int bin = findBinIndex(delayMs);
             histogram[bin]++;
             if (delayMs > maxDelayMs) {
@@ -62,12 +71,15 @@ public class GtfsDelayCounter extends PipelineStep<GtfsRealtime.TripUpdate> {
         public void clear() {
             histogram = new long[binsMs.length];
             overMaxCounter = 0;
+            min = Long.MAX_VALUE;
+            max = 0L;
         }
 
         @Override
         public List<String> results() {
             List<String> results = new LinkedList<>();
             results.add("Delay spread: " + Arrays.toString(histogram) + " (bins: " + Arrays.toString(binsMs) + ")");
+            results.add("Min: " + min + "ms, Max: " + max + "ms");
             return results;
         }
 
@@ -78,7 +90,7 @@ public class GtfsDelayCounter extends PipelineStep<GtfsRealtime.TripUpdate> {
 
         @Override
         public String alertMessage() {
-            return overMaxCounter + " messages with larger delay than " + maxDelayMs + "ms";
+            return overMaxCounter + " messages with larger delay than " + maxDelayMs + "ms where max: " + max + "ms";
         }
     }
 
