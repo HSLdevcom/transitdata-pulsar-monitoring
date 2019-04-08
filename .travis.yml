@@ -7,6 +7,12 @@ jdk:
 services:
   - docker
 
+addons:
+  apt:
+    packages:
+      # Needed for `xmllint`.
+      - libxml2-utils
+
 env:
   global:
     # Docker Hub cannot handle uppercase characters in repository names. Fix it
