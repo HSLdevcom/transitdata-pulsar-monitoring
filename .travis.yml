@@ -28,6 +28,7 @@ before_install:
   - echo "ENV GIT_COMMIT ${TRAVIS_COMMIT}" >> Dockerfile
 
 script:
+  - set -e
   - ./.travis/check_semver
   - docker build --tag "${DOCKER_LOCAL}" .
 
