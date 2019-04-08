@@ -22,6 +22,7 @@ before_install:
   - echo "ENV GIT_COMMIT ${TRAVIS_COMMIT}" >> Dockerfile
 
 script:
+  - sh ./.travis/check_semver
   - docker build --tag "${DOCKER_LOCAL}" .
 
 # develop-branch pushes the image with "latest"-tag. Tagged commit will push the image with fully versioned tags
