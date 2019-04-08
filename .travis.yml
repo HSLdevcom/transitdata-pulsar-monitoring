@@ -23,13 +23,14 @@ before_install:
 script:
   - docker build --tag "${DOCKER_LOCAL}" .
 
+# develop-branch pushes the image with "latest"-tag, tagged commit on master-branch will push the image with the versioned tags
 deploy:
   - provider: script
     script: sh ./.travis/docker_login_tag_push "${DOCKER_LOCAL}" "${DOCKER_MASTER}"
     on:
-      branch: master
+      branch: develop
   - provider: script
-    script: sh ./.travis/docker_login_tag_semver_push "${DOCKER_LOCAL}" "${LOWERCASE_REPO_SLUG}" "${TRAVIS_TAG}"
+    script: sh ./.travis/docker_login_tag_semver_push "${DOCKER_LOCAL}" "${LOWERCASE_REPO_SLUG}" "${TRAVIS_TAG}" "${TRAVIS_COMMIT}"
     on:
       tags: true
-      all_branches: true
+      branch: master
