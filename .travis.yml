@@ -20,7 +20,7 @@ env:
     # substitution.
     - LOWERCASE_REPO_SLUG="${TRAVIS_REPO_SLUG,,}"
     - DOCKER_LOCAL="${LOWERCASE_REPO_SLUG}:${TRAVIS_COMMIT}"
-    - DOCKER_MASTER="${LOWERCASE_REPO_SLUG}:latest"
+    - DOCKER_DEV_TAG="${LOWERCASE_REPO_SLUG}:develop"
     - BUILD_HASH=$(echo "${TRAVIS_COMMIT}" | cut -c1-7)
 
 before_install:
@@ -32,10 +32,10 @@ script:
   - ./.travis/check_semver
   - docker build --tag "${DOCKER_LOCAL}" .
 
-# develop-branch pushes the image with "latest"-tag. Tagged commit will push the image with fully versioned tags
+# develop-branch pushes the image with "develop"-tag. Tagged commit will push the image with fully versioned tags
 deploy:
   - provider: script
-    script: sh ./.travis/docker_login_tag_push "${DOCKER_LOCAL}" "${DOCKER_MASTER}"
+    script: sh ./.travis/docker_login_tag_push "${DOCKER_LOCAL}" "${DOCKER_DEV_TAG}"
     on:
       branch: develop
   - provider: script
